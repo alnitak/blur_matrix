@@ -28,19 +28,42 @@ class BlurMatrixAnimate extends StatefulWidget {
 }
 
 class _BlurMatrixAnimateState extends State<BlurMatrixAnimate>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   late List<List<Color>> m;
 
   @override
   void dispose() {
-    super.dispose();
+    _animation.removeListener(_animationListener);
+    _controller.stop();
     _controller.dispose();
+    super.dispose();
+  }
+
+  /// intercept hot reload and reset the parameters
+  @override
+  void reassemble() {
+    super.reassemble();
+    _animation.removeListener(_animationListener);
+    _controller.dispose();
+    _init();
   }
 
   @override
   void initState() {
+    _init();
+    super.initState();
+  }
+
+  _animationListener() {
+    setState(() {
+      calcColors();
+    });
+  }
+
+  /// initialize matrix colors and animation
+  _init() {
     m = List.generate(
         widget.colors.length, (index) => []..addAll(widget.colors[index]));
 
@@ -51,15 +74,9 @@ class _BlurMatrixAnimateState extends State<BlurMatrixAnimate>
 
     _animation = Tween(begin: 0.0, end: 1.0)
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut))
-          ..addListener(() {
-            setState(() {
-              calcColors();
-            });
-          })
-          ..addStatusListener((AnimationStatus status) {});
+      ..addListener( _animationListener );
 
     _controller.repeat(reverse: true);
-    super.initState();
   }
 
   @override
@@ -69,6 +86,7 @@ class _BlurMatrixAnimateState extends State<BlurMatrixAnimate>
     );
   }
 
+  /// compute color from a to b based on animation
   Color _lerp(Color a, Color b) {
     return Color.lerp(a, b, _controller.value) ?? Colors.transparent;
   }
@@ -139,6 +157,7 @@ class BlurMatrix extends StatelessWidget {
 
     // this doesn't work on web: https://github.com/flutter/flutter/issues/45190
     // it never complete
+    // Use this on other platforms because it's faster
     if (!kIsWeb)
       ui.decodeImageFromPixels(
         pixels.buffer.asUint8List(),
@@ -161,6 +180,7 @@ class BlurMatrix extends StatelessWidget {
   }
 }
 
+/// class to compose an uncompressed bmp image
 class RGBA32BitmapHeader {
   static const int RGBA32HeaderSize = 122;
   final int contentSize;

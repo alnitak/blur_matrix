@@ -1,5 +1,5 @@
 name: blur_matrix
-description: A widget that draws a matrix of colors like gradients static or animated
+description: A widget that draws a matrix of colors gradients. Could be also animated. Could be a starting point for nice visuals.
 version: 1.0.0+1
 author: Marco Bavagnoli <marcobavagnolidev@gmail.com>
 homepage: https://github.com/alnitak/blur_matrix
